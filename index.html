@@ -10,24 +10,47 @@
 				background-color: #ffffff;
 			}
 
-			#blocker {
+			#overlay {
 				position: absolute;
+				font-size: 16px;
+				z-index: 2;
 				top: 0;
 				left: 0;
-				bottom: 0;
-				right: 0;
+				width: 100%;
+				height: 100%;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				flex-direction: column;
+				background: rgba(0,0,0,0.7);
+			}
+
+			#overlay button {
+				background: transparent;
+				border: 0;
+				border: 1px solid rgb(255, 255, 255);
+				border-radius: 4px;
+				color: #ffffff;
+				padding: 12px 18px;
+				text-transform: uppercase;
+				cursor: pointer;
 			}
 		</style>
 	</head>
 	<body>
 		<div id="container"></div>
-		<div id="blocker"></div>
+
+		<video id="video" loop crossOrigin="anonymous"  playsinline style="display:none">
+			<source src="models/textures/record.MP4" type='video/mp4' autoplay="true">
+		</video>
+
+		<div id="overlay">
+			<button id="startButton">Play</button>
+		</div>
 
 		<!-- Import maps polyfill -->
 		<!-- Remove this when import maps will be widely supported -->
 		<script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
-
-		<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 
 		<script type="importmap">
 			{
@@ -42,48 +65,28 @@
 			import * as THREE from 'three';
 
 			import { TrackballControls } from 'https://unpkg.com/three@0.139.2/examples/jsm/controls/TrackballControls.js';
-			import { CSS3DRenderer, CSS3DObject } from 'https://unpkg.com/three@0.139.2/examples/jsm/renderers/CSS3DRenderer.js';
 
 			import { GLTFLoader } from 'https://unpkg.com/three@0.139.2/examples/jsm/loaders/GLTFLoader.js';
 			import { RGBELoader } from 'https://unpkg.com/three@0.139.2/examples/jsm/loaders/RGBELoader.js';
 
 			let camera, scene, renderer, renderer1;
 			let controls;
-			let buddha, phone;
+			let video;
+			let buddha, phone, screen, videoScreen;
+			let material, videoMaterial, texture, vTexture;
 
-			function Element( x, y, z, ry ) {
+			const startButton = document.getElementById( 'startButton' );
+			startButton.addEventListener( 'click', function () {
 
-				const div = document.createElement( 'div' );
-				div.style.width = '480px';
-				div.style.height = '360px';
-				div.style.backgroundColor = '#fff';
-				div.style.overflow = 'hidden';
+				init();
+				animate();
 
-				// const iframe = document.createElement( 'iframe' );
-				// iframe.style.width = '480px';
-				// iframe.style.height = '360px';
-				// iframe.style.border = '0px';
-				//iframe.src = [ 'https://www.youtube.com/embed/', id, '?rel=0' ].join( '' );
-
-				//div.appendChild( iframe );
-
-				const element = document.createElement('a');
-				element.setAttribute('class', 'twitter-timeline');
-				element.setAttribute('href','https://twitter.com/ningxiaz?ref_src=twsrc%5Etfw');
-				div.appendChild(element);
-
-				const object = new CSS3DObject( div );
-				object.position.set( x, y, z );
-				object.rotation.y = ry;
-
-				return object;
-
-			}
-
-			init();
-			animate();
+			} );
 
 			function init() {
+
+				const overlay = document.getElementById( 'overlay' );
+				overlay.remove();
 
 				const container = document.getElementById( 'container' );
 
@@ -96,29 +99,17 @@
 				scene.background = new THREE.Color( 0xffffff );
 				
 
-				const light = new THREE.DirectionalLight( 0xffffff );
-				light.position.set( 0, 0, 1 );
+				const light = new THREE.DirectionalLight( 0xffffff, 2 );
+				light.position.set( 1, 0, 0 );
 				scene.add( light );
 
-				// const loader = new GLTFLoader().setPath( 'models/' );
-				// loader.load( 'scene.gltf', function ( gltf ) {
 
-				// 	scene.add( gltf.scene );
-
-				// } );
-
-
-				// renderer = new CSS3DRenderer();
-				// renderer.setSize( window.innerWidth, window.innerHeight );
-				// container.appendChild( renderer.domElement );
-
-				
 				// Another renderer
 				renderer1 = new THREE.WebGLRenderer();
 				renderer1.setPixelRatio( window.devicePixelRatio );
 				renderer1.setSize( window.innerWidth, window.innerHeight );
 				renderer1.toneMapping = THREE.ACESFilmicToneMapping;
-				renderer1.toneMappingExposure = 1;
+				renderer1.toneMappingExposure = 1.5;
 				container.appendChild( renderer1.domElement );
 
 				controls = new TrackballControls( camera, renderer1.domElement );
@@ -126,10 +117,20 @@
 
 				window.addEventListener( 'resize', onWindowResize );
 
-				// const group = new THREE.Group();
-				// group.add( new Element( 0, 0, 240, 0 ) );
-				// scene.add( group );
 
+				video = document.getElementById( 'video' );
+				video.autoplay = true;
+				video.play();
+				video.addEventListener( 'play', function () {
+					console.log("playing");
+					this.currentTime = 3;
+
+				} );
+				
+				vTexture = new THREE.VideoTexture( video );
+				vTexture.needsUpdate = true;
+
+			
 				//Load scene and models
 				new RGBELoader()
 					.setPath( 'textures/' )
@@ -156,36 +157,35 @@
 						} );
 
 						loader.load( 'models/phone.gltf', function ( gltf ) {
-							scene.add( gltf.scene );
+							
 							phone = gltf.scene;
 							phone.scale.set(10,10,10);
 							phone.position.set( 6,-4,10);
 							phone.rotation.x = Math.PI / 12;
 
+							phone.traverse(function(o) {
+								if(o.isMesh && o.name == "Body_Wallpaper_0") {
+									
+									//o.material = material;
+									o.material.side = THREE.BackSide;
+									// o.material.emissive = new THREE.Color( 0x333333 );
+									o.material.map = vTexture;
+									o.material.needsUpdate = true;
+									o.material.toneMapped = false;
+								}
+							});
+							scene.add( phone );
+
+							light.target = phone
+
 						}, undefined, function ( error ) {
 							console.error( error );
 						} );
 
+
 					} );
 
 				
-
-
-				// Block iframe events when dragging camera
-
-				const blocker = document.getElementById( 'blocker' );
-				blocker.style.display = 'none';
-
-				controls.addEventListener( 'start', function () {
-
-					blocker.style.display = '';
-
-				} );
-				controls.addEventListener( 'end', function () {
-
-					blocker.style.display = 'none';
-
-				} );
 
 			}
 
