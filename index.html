@@ -69,11 +69,11 @@
 			import { GLTFLoader } from 'https://unpkg.com/three@0.139.2/examples/jsm/loaders/GLTFLoader.js';
 			import { RGBELoader } from 'https://unpkg.com/three@0.139.2/examples/jsm/loaders/RGBELoader.js';
 
-			let camera, scene, renderer, renderer1;
+			let camera, scene, renderer;
 			let controls;
 			let video;
-			let buddha, phone, screen, videoScreen;
-			let material, videoMaterial, texture, vTexture;
+			let buddha, phone;
+			let vTexture;
 
 			const startButton = document.getElementById( 'startButton' );
 			startButton.addEventListener( 'click', function () {
@@ -103,16 +103,14 @@
 				light.position.set( 1, 0, 0 );
 				scene.add( light );
 
+				renderer = new THREE.WebGLRenderer();
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.toneMapping = THREE.ACESFilmicToneMapping;
+				renderer.toneMappingExposure = 1.5;
+				container.appendChild( renderer.domElement );
 
-				// Another renderer
-				renderer1 = new THREE.WebGLRenderer();
-				renderer1.setPixelRatio( window.devicePixelRatio );
-				renderer1.setSize( window.innerWidth, window.innerHeight );
-				renderer1.toneMapping = THREE.ACESFilmicToneMapping;
-				renderer1.toneMappingExposure = 1.5;
-				container.appendChild( renderer1.domElement );
-
-				controls = new TrackballControls( camera, renderer1.domElement );
+				controls = new TrackballControls( camera, renderer.domElement );
 				controls.rotateSpeed = 4;
 
 				window.addEventListener( 'resize', onWindowResize );
@@ -122,9 +120,7 @@
 				video.autoplay = true;
 				video.play();
 				video.addEventListener( 'play', function () {
-					console.log("playing");
 					this.currentTime = 3;
-
 				} );
 				
 				vTexture = new THREE.VideoTexture( video );
@@ -166,9 +162,7 @@
 							phone.traverse(function(o) {
 								if(o.isMesh && o.name == "Body_Wallpaper_0") {
 									
-									//o.material = material;
 									o.material.side = THREE.BackSide;
-									// o.material.emissive = new THREE.Color( 0x333333 );
 									o.material.map = vTexture;
 									o.material.needsUpdate = true;
 									o.material.toneMapped = false;
@@ -190,20 +184,16 @@
 			}
 
 			function onWindowResize() {
-
 				camera.aspect = window.innerWidth / window.innerHeight;
 				camera.updateProjectionMatrix();
-				//renderer.setSize( window.innerWidth, window.innerHeight );
-				renderer1.setSize( window.innerWidth, window.innerHeight );
+				renderer.setSize( window.innerWidth, window.innerHeight );
 
 			}
 
 			function animate() {
-
 				requestAnimationFrame( animate );
 				controls.update();
-				//renderer.render( scene, camera );
-				renderer1.render( scene, camera );
+				renderer.render( scene, camera );
 
 			}
 
