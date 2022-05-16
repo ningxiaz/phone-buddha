@@ -65,6 +65,7 @@
 			import * as THREE from 'three';
 
 			import { TrackballControls } from 'https://unpkg.com/three@0.139.2/examples/jsm/controls/TrackballControls.js';
+			import { PointerLockControls } from 'https://unpkg.com/three@0.139.2/examples/jsm/controls/PointerLockControls.js';
 
 			import { GLTFLoader } from 'https://unpkg.com/three@0.139.2/examples/jsm/loaders/GLTFLoader.js';
 			import { RGBELoader } from 'https://unpkg.com/three@0.139.2/examples/jsm/loaders/RGBELoader.js';
@@ -72,8 +73,18 @@
 			let camera, scene, renderer;
 			let controls;
 			let video;
-			let buddha, phone;
+			let buddha, phone, gallery;
 			let vTexture;
+
+			const NATURE_SCENE = 0;
+			const GALLERY_SCENE = 1;
+			let currentScene = GALLERY_SCENE;
+
+			// for pointer lock controls
+			let moveForward = false;
+			let moveBackward = false;
+			let moveLeft = false;
+			let moveRight = false;
 
 			const startButton = document.getElementById( 'startButton' );
 			startButton.addEventListener( 'click', function () {
@@ -90,28 +101,18 @@
 
 				const container = document.getElementById( 'container' );
 
-				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 100 );
-				camera.position.set( -40, 12, 20 );
-
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
+				camera.position.set( -40, 16, 0 );
 
 				scene = new THREE.Scene();
-
-				scene.background = new THREE.Color( 0xffffff );
+				scene.background = new THREE.Color( 0x333333 );
 				
-
-				const light = new THREE.DirectionalLight( 0xffffff, 2 );
-				light.position.set( 1, 0, 0 );
-				scene.add( light );
-
 				renderer = new THREE.WebGLRenderer();
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				renderer.toneMapping = THREE.ACESFilmicToneMapping;
 				renderer.toneMappingExposure = 1.5;
 				container.appendChild( renderer.domElement );
-
-				controls = new TrackballControls( camera, renderer.domElement );
-				controls.rotateSpeed = 4;
 
 				window.addEventListener( 'resize', onWindowResize );
 
@@ -127,7 +128,147 @@
 				vTexture.needsUpdate = true;
 
 			
-				//Load scene and models
+				if (currentScene == NATURE_SCENE) {
+					loadNatureScene();
+				}
+				else if (currentScene == GALLERY_SCENE) {
+					loadGalleryScene();
+				}
+
+
+			}
+
+			function loadGalleryScene() {
+				// controls = new PointerLockControls( camera, document.body );
+				// scene.add( controls.getObject() );
+
+				// controls.lock();
+
+				// const onKeyDown = function ( event ) {
+
+				// 	switch ( event.code ) {
+
+				// 		case 'ArrowUp':
+				// 		case 'KeyW':
+				// 			moveForward = true;
+				// 			break;
+
+				// 		case 'ArrowLeft':
+				// 		case 'KeyA':
+				// 			moveLeft = true;
+				// 			break;
+
+				// 		case 'ArrowDown':
+				// 		case 'KeyS':
+				// 			moveBackward = true;
+				// 			break;
+
+				// 		case 'ArrowRight':
+				// 		case 'KeyD':
+				// 			moveRight = true;
+				// 			break;
+
+				// 	}
+
+				// };
+
+				// const onKeyUp = function ( event ) {
+
+				// 	switch ( event.code ) {
+
+				// 		case 'ArrowUp':
+				// 		case 'KeyW':
+				// 			moveForward = false;
+				// 			break;
+
+				// 		case 'ArrowLeft':
+				// 		case 'KeyA':
+				// 			moveLeft = false;
+				// 			break;
+
+				// 		case 'ArrowDown':
+				// 		case 'KeyS':
+				// 			moveBackward = false;
+				// 			break;
+
+				// 		case 'ArrowRight':
+				// 		case 'KeyD':
+				// 			moveRight = false;
+				// 			break;
+
+				// 	}
+
+				// };
+				controls = new TrackballControls( camera, renderer.domElement );
+				controls.rotateSpeed = 4;
+
+
+				// document.addEventListener( 'keydown', onKeyDown );
+				// document.addEventListener( 'keyup', onKeyUp );
+
+
+				const light = new THREE.PointLight( 0xffffff, 1, 100 );
+				light.position.set( 0, 30, 0 );
+				scene.add( light );
+
+				const ambientLight = new THREE.AmbientLight( 0x404040, 5 ); // soft white light
+				scene.add( ambientLight );
+
+				const loader = new GLTFLoader();
+
+				loader.load( 'models/scene.gltf', function ( gltf ) {
+					scene.add( gltf.scene );
+					gallery = gltf.scene;
+					gallery.scale.set(12,12,12);
+					gallery.position.set(0,0,0);
+
+				}, undefined, function ( error ) {
+					console.error( error );
+				} );
+
+				loader.load( 'models/buddha.gltf', function ( gltf ) {
+					scene.add( gltf.scene );
+					buddha = gltf.scene;
+					buddha.scale.set(10,10,10);
+					buddha.position.set(0,0,0);
+
+				}, undefined, function ( error ) {
+					console.error( error );
+				} );
+
+				loader.load( 'models/phone.gltf', function ( gltf ) {
+					
+					phone = gltf.scene;
+					phone.scale.set(10,10,10);
+					phone.position.set( 6,6,10);
+					phone.rotation.x = Math.PI / 12;
+
+					phone.traverse(function(o) {
+						if(o.isMesh && o.name == "Body_Wallpaper_0") {
+							
+							o.material.side = THREE.BackSide;
+							o.material.map = vTexture;
+							o.material.needsUpdate = true;
+							o.material.toneMapped = false;
+						}
+					});
+					scene.add( phone );
+
+					light.target = phone
+
+				}, undefined, function ( error ) {
+					console.error( error );
+				} );
+			}
+
+			function loadNatureScene() {
+				controls = new TrackballControls( camera, renderer.domElement );
+				controls.rotateSpeed = 4;
+
+				const light = new THREE.DirectionalLight( 0xffffff, 2 );
+				light.position.set( 1, 0, 0 );
+				scene.add( light );
+
 				new RGBELoader()
 					.setPath( 'textures/' )
 					.load( 'forest_slope_1k.hdr', function ( texture ) {
@@ -178,9 +319,6 @@
 
 
 					} );
-
-				
-
 			}
 
 			function onWindowResize() {
@@ -192,6 +330,9 @@
 
 			function animate() {
 				requestAnimationFrame( animate );
+				// if (currentScene == NATURE_SCENE) {
+				// 	controls.update();
+				// }
 				controls.update();
 				renderer.render( scene, camera );
 
