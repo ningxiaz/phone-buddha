@@ -5,12 +5,17 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<!-- <link type="text/css" rel="stylesheet" href="main.css"> -->
+
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;1,500&family=Space+Mono&display=swap" rel="stylesheet">
+
 		<style>
 			body {
 				background-color: #ffffff;
 			}
 
-			#overlay {
+			.overlay {
 				position: absolute;
 				font-size: 16px;
 				z-index: 2;
@@ -25,14 +30,29 @@
 				background: rgba(0,0,0,0.7);
 			}
 
-			#overlay button {
+			.overlay h2 {
+				font-family: 'Cormorant', serif;
+				font-weight: 500;
+				font-style: italic;
+				font-size: 3em;
+				color: #ffffff;
+			}
+
+			.overlay p {
+				font-family: 'Cormorant', serif;
+				font-weight: 400;
+				font-size: 1.5em;
+				color: #ffffff;
+			}
+
+			.overlay button {
+				font-family: 'Space Mono', monospace;
+				font-size: 1em;
 				background: transparent;
 				border: 0;
 				border: 1px solid rgb(255, 255, 255);
-				border-radius: 4px;
 				color: #ffffff;
 				padding: 12px 18px;
-				text-transform: uppercase;
 				cursor: pointer;
 			}
 		</style>
@@ -44,7 +64,13 @@
 			<source src="models/textures/record.mp4" type='video/mp4' autoplay="true">
 		</video>
 
-		<div id="overlay">
+		<audio id="audio" loop crossOrigin="anonymous" style="display:none">
+		  <source src="audio/sound.mp3" type="audio/mp3">
+		</audio>
+
+		<div id="start" class="overlay">
+			<h2>Phone Buddha</h2>
+			<p>An installation by Ningxia Zhang</p>
 			<button id="startButton">Enter</button>
 		</div>
 
@@ -72,13 +98,13 @@
 
 			let camera, scene, renderer;
 			let controls;
-			let video;
+			let video, audio;
 			let buddha, phone, gallery;
 			let vTexture;
 
 			const NATURE_SCENE = 0;
 			const GALLERY_SCENE = 1;
-			let currentScene = GALLERY_SCENE;
+			let currentScene = NATURE_SCENE;
 
 			const startButton = document.getElementById( 'startButton' );
 			startButton.addEventListener( 'click', function () {
@@ -90,8 +116,8 @@
 
 			function init() {
 
-				const overlay = document.getElementById( 'overlay' );
-				overlay.remove();
+				const startOverlay = document.getElementById( 'start' );
+				startOverlay.remove();
 
 				const container = document.getElementById( 'container' );
 
@@ -123,6 +149,9 @@
 				
 				vTexture = new THREE.VideoTexture( video );
 				vTexture.needsUpdate = true;
+
+				// prepare audio
+				audio = document.getElementById('audio');
 
 			
 				if (currentScene == NATURE_SCENE) {
@@ -197,6 +226,9 @@
 			}
 
 			function loadNatureScene() {
+
+				audio.volume = 0.1;
+				audio.play();
 
 				const light = new THREE.DirectionalLight( 0xffffff, 2 );
 				light.position.set( 1, 0, 0 );
