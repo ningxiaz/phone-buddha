@@ -19,7 +19,7 @@
 			.overlay {
 				position: absolute;
 				font-size: 16px;
-				z-index: 2;
+				z-index: 4;
 				top: 0;
 				left: 0;
 				width: 100%;
@@ -57,15 +57,16 @@
 				cursor: pointer;
 			}
 
-			#loading {
+			#loading, #teleporting {
 				background: rgba(0,0,0,1);
 				opacity: 0;
+				display: none;
 			}
 
 			.header {
 				position: absolute;
 				top:  0;
-				z-index: 10;
+				z-index: 2;
 				width: 100%;
 				background: rgba(0,0,0,0.7);
 				color:  white;
@@ -91,6 +92,7 @@
 				padding-left: 20px;
 				font-family: 'Space Mono', monospace;
 				font-size: 0.875em;
+				cursor: pointer;
 			}
 
 			.title {
@@ -115,7 +117,11 @@
 		</audio>
 
 		<div id="loading" class="overlay">
-			<h2>Loading...</h2>
+			<h2>Entering...</h2>
+		</div>
+
+		<div id="teleporting" class="overlay">
+			<h2>Teleporting...</h2>
 		</div>
 
 		<div id="start" class="overlay">
@@ -128,7 +134,7 @@
 
 		<div id="header" class="header">
 			<div class="wrapper">
-				<div class="title">Phone Buddha <span>(in the gallery)</span></div>
+				<div class="title">Phone Buddha <span id="title">(in the gallery)</span></div>
 				<nav class="menu">
 					<ul>
 					    <li id="teleport">Teleport</li>
@@ -163,10 +169,11 @@
 			let camera, scene, renderer;
 			let controls;
 			let video, audio;
+			let hdrLoader, modelLoader;
 			let buddha, phone, gallery;
 			let vTexture;
 
-			let startOverlay, loadingOverlay, header;
+			let startOverlay, loadingOverlay, header, teleportingOverlay, title;
 
 			const NATURE_SCENE = 0;
 			const GALLERY_SCENE = 1;
@@ -180,15 +187,26 @@
 
 			} );
 
+			const teleportButton = document.getElementById('teleport');
+			teleportButton.addEventListener( 'click', function () {
+
+				teleport();
+
+			} );
+
 			function init() {
 
 				startOverlay = document.getElementById( 'start' );
 				startOverlay.remove();
 
 				loadingOverlay = document.getElementById('loading');
+				loadingOverlay.style.display = 'flex';
 				loadingOverlay.style.opacity = 1;
 
+				teleportingOverlay = document.getElementById('teleporting');
+
 				header = document.getElementById('header');
+				title = document.getElementById('title');
 
 				const container = document.getElementById( 'container' );
 
@@ -224,22 +242,14 @@
 				// prepare audio
 				audio = document.getElementById('audio');
 
-			
-				if (currentScene == NATURE_SCENE) {
-					loadNatureScene();
-				}
-				else if (currentScene == GALLERY_SCENE) {
-					loadGalleryScene();
-				}
+				hdrLoader = new RGBELoader();
+				modelLoader = new GLTFLoader();
 
-
+				// first enter the gallery scene
+				loadGalleryScene();
 			}
 
 			function loadGalleryScene() {
-
-				// const light = new THREE.PointLight( 0xffffff, 1, 100 );
-				// light.position.set( 0, 30, 0 );
-				// scene.add( light );
 
 				const ambientLight = new THREE.AmbientLight( 0x404040, 5 ); // soft white light
 				scene.add( ambientLight );
@@ -247,11 +257,7 @@
 				const directionalLight = new THREE.DirectionalLight( 0xffffff, 2 );
 				scene.add( directionalLight );
 
-
-
-				const loader = new GLTFLoader();
-
-				loader.load( 'models/scene.gltf', function ( gltf ) {
+				modelLoader.load( 'models/scene.gltf', function ( gltf ) {
 					scene.add( gltf.scene );
 					gallery = gltf.scene;
 					gallery.scale.set(12,12,12);
@@ -261,7 +267,7 @@
 					console.error( error );
 				} );
 
-				loader.load( 'models/buddha.gltf', function ( gltf ) {
+				modelLoader.load( 'models/buddha.gltf', function ( gltf ) {
 					scene.add( gltf.scene );
 					buddha = gltf.scene;
 					buddha.scale.set(10,10,10);
@@ -277,7 +283,7 @@
 					console.error( error );
 				} );
 
-				loader.load( 'models/phone.gltf', function ( gltf ) {
+				modelLoader.load( 'models/phone.gltf', function ( gltf ) {
 					
 					phone = gltf.scene;
 					phone.scale.set(10,10,10);
@@ -300,69 +306,76 @@
 				} );
 			}
 
-			function loadNatureScene() {
+			function teleport() {
+				
+				teleportingOverlay.style.display = 'flex';
+				teleportingOverlay.style.opacity = 1;
 
-				audio.volume = 0.1;
-				audio.play();
+				// use 1 second to teleport
+				setTimeout(() => {
+				 	teleportingOverlay.style.opacity = 0;
+					teleportingOverlay.style.display = 'none';
+				}, 1000);
 
-				const light = new THREE.DirectionalLight( 0xffffff, 2 );
-				light.position.set( 1, 0, 0 );
-				scene.add( light );
+				clearScene();
 
-				new RGBELoader()
-					.setPath( 'models/textures/' )
-					.load( 'forest_slope_4k.hdr', function ( texture ) {
+				if(currentScene == GALLERY_SCENE) {
+					audio.volume = 0.1;
+					audio.play();
 
-						texture.mapping = THREE.EquirectangularReflectionMapping;
-						
+					const light = new THREE.DirectionalLight( 0xffffff, 2 );
+					light.position.set( 1, 0, 0 );
+					scene.add( light );
 
+					hdrLoader.setPath( 'models/textures/' ).load( 'forest_slope_4k.hdr', function ( texture ) {
+						texture.mapping = THREE.EquirectangularReflectionMapping;					
 						scene.background = texture;
 						scene.environment = texture;
-
-						// model
-
-						const loader = new GLTFLoader();
-
-						loader.load( 'models/buddha.gltf', function ( gltf ) {
-							scene.add( gltf.scene );
-							buddha = gltf.scene;
-							buddha.scale.set(10,10,10);
-							buddha.position.set(0,-10,0);
-
-							loadingOverlay.style.opacity = 0;
-							loadingOverlay.style.display = 'none';
-							header.style.opacity = 1;
-
-						}, undefined, function ( error ) {
-							console.error( error );
-						} );
-
-						loader.load( 'models/phone.gltf', function ( gltf ) {
-							
-							phone = gltf.scene;
-							phone.scale.set(10,10,10);
-							phone.position.set( 6,-4,10);
-							phone.rotation.x = Math.PI / 12;
-
-							phone.traverse(function(o) {
-								if(o.isMesh && o.name == "Body_Wallpaper_0") {
-									
-									o.material.side = THREE.BackSide;
-									o.material.map = vTexture;
-									o.material.needsUpdate = true;
-									o.material.toneMapped = false;
-								}
-							});
-							scene.add( phone );
-
-							light.target = phone;
-
-						}, undefined, function ( error ) {
-							console.error( error );
-						} );
-
-
 					} );
+
+					buddha.position.set(0,-10,0);
+					scene.add(buddha);
+
+					phone.position.set( 6,-4,10);
+					scene.add(phone);
+					light.target = phone;
+
+					// preparation for the scene is done
+					currentScene = NATURE_SCENE;
+					title.innerText = '(in the forest)';
+
+				}
+				else if (currentScene == NATURE_SCENE) {
+					audio.pause();
+					audio.currentTime = 0;
+
+					const ambientLight = new THREE.AmbientLight( 0x404040, 5 ); // soft white light
+					scene.add( ambientLight );
+
+					const directionalLight = new THREE.DirectionalLight( 0xffffff, 2 );
+					scene.add( directionalLight );
+
+					scene.background = new THREE.Color( 0x333333 );
+					scene.environment = null;
+
+					// these models are previously loaded
+					scene.add(gallery);
+					buddha.position.set(0,0,0);
+					directionalLight.target = buddha;
+					scene.add(buddha);
+					phone.position.set( 6,6,10);
+					scene.add(phone);
+
+					currentScene = GALLERY_SCENE;
+					title.innerText = '(in the gallery)';
+				}
+
+			}
+
+			function clearScene() {
+				while(scene.children.length > 0){ 
+				    scene.remove(scene.children[0]); 
+				}
 			}
 
 			function onWindowResize() {
