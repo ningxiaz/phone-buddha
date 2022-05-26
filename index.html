@@ -18,7 +18,6 @@
 
 			.overlay {
 				position: absolute;
-				font-size: 16px;
 				z-index: 4;
 				top: 0;
 				left: 0;
@@ -52,7 +51,7 @@
 				color:  white;
 			}
 
-			.overlay button {
+			button {
 				font-family: 'Space Mono', monospace;
 				font-size: 1em;
 				background: transparent;
@@ -64,7 +63,7 @@
 				margin: 16px 0;
 			}
 
-			.instructions {
+			.overlay .instructions {
 				font-family: 'Space Mono', monospace;
 				font-size: 0.75em;
 				color:  white;
@@ -117,6 +116,79 @@
 				font-style: normal;
 			}
 
+			.modal {
+				position: absolute;
+				z-index: 4;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				overflow-y: scroll;
+				display: none;
+				opacity: 0;
+			}
+
+			#about {
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				background: rgba(0,0,0,0.85);
+				color:  white;
+				max-width: 560px;
+    			width: 60%;
+    			justify-content: center;
+    			padding: 32px;
+			}
+
+			@media (max-width: 780px) {
+				#about {
+					top: 0;
+					left: 0;
+					transform: none;
+					width: 100%;
+					max-width: 100%;
+					box-sizing: border-box;
+				}
+			}
+
+			#about h4 {
+				font-family: 'Cormorant', serif;
+				font-weight: 600;
+				font-style: italic;
+				font-size: 2em;
+				color: white;
+				margin:  16px 0;
+			}
+
+			#about h6 {
+				font-family: 'Cormorant', serif;
+				font-weight: 400;
+				font-size: 1em;
+				color: #ffffff;
+				margin:  16px 0;
+			}
+
+			#about p {
+				font-family: 'Cormorant', serif;
+				font-weight: 400;
+				font-size: 1.5em;
+				color: #ffffff;
+			}
+
+			#about button {
+				position: absolute;
+				top: 0;
+				right: 0;
+				margin: 0;
+			}
+
+			#about .instructions {
+				font-family: 'Space Mono', monospace;
+				font-size: 0.75em;
+				color:  white;
+			}
+
 			@media (max-width: 576px) {
 				.header .wrapper {
 					justify-content: center;
@@ -167,12 +239,25 @@
 				<div class="title">Phone Buddha <span id="title">(in the gallery)</span></div>
 				<nav class="menu">
 					<ul>
-					    <li id="teleport">⚡ Teleport</li>
-					    <li id="about">❔About</li>
+					    <li id="teleportButton">⚡ Teleport</li>
+					    <li id="aboutButton">❔About</li>
 					  </ul>
 				</nav>
 			</div>
 		</div>
+
+		<div class="modal" id="aboutModal">
+			<div id="about">
+				<h4>Phone Buddha</h4>
+				<h6>Virtual installation, 2022</h6>
+				<p>Not sure since when, we’ve been used to learning about the distant or close-by sufferings of other human beings on our phones. The term ‘doomscrolling’ has been dubbed to describe this depressive yet addictive activity.</p>
+				<p>By positioning Buddha as the  subject of scrolling through world news, this installation poses questions such as whether ancient philosophy is still applicable in our present day disasters, such as climate change, pandemic and wars; how we view and process the immense sufferings we see on a digital screen.</p>
+
+				<p class="instructions">Drag to move around the installation. Zoom in and out with mouse or trackpad. Use arrow keys to pan.</p>
+				<button id="closeButton">X</button>
+			</div>
+		</div>
+		
 
 		<!-- Import maps polyfill -->
 		<!-- Remove this when import maps will be widely supported -->
@@ -216,10 +301,28 @@
 
 			} );
 
-			const teleportButton = document.getElementById('teleport');
+			const teleportButton = document.getElementById('teleportButton');
 			teleportButton.addEventListener( 'click', function () {
 
 				teleport();
+
+			} );
+
+			const aboutButton = document.getElementById('aboutButton');
+			const aboutModal = document.getElementById('aboutModal');
+			aboutButton.addEventListener( 'click', function () {
+
+				aboutModal.style.display = 'block';
+				aboutModal.style.opacity = 1;
+
+			} );
+
+			const closeButton = document.getElementById('closeButton');
+			closeButton.addEventListener( 'click', function () {
+
+				aboutModal.style.opacity = 0;
+				aboutModal.style.display = 'none';
+				
 
 			} );
 
