@@ -1,5 +1,4 @@
 
-
 body {
 	background-color: #ffffff;
 	margin: 0;
@@ -17,6 +16,7 @@ body {
 	justify-content: center;
 	flex-direction: column;
 	background: rgba(0,0,0,0.9);
+	color:  white;
 }
 
 .overlay h2 {
@@ -24,7 +24,6 @@ body {
 	font-weight: 600;
 	font-style: italic;
 	font-size: 3em;
-	color: #ffffff;
 	margin: 0;
 }
 
@@ -32,7 +31,6 @@ body {
 	font-family: 'Cormorant', serif;
 	font-weight: 400;
 	font-size: 1.5em;
-	color: #ffffff;
 	margin:  16px 0;
 }
 
@@ -55,7 +53,6 @@ button {
 .overlay .instructions {
 	font-family: 'Space Mono', monospace;
 	font-size: 0.75em;
-	color:  white;
 	width: 80%;
 	max-width: 480px;
 	text-align: center;
@@ -107,7 +104,7 @@ button {
 
 .modal {
 	position: absolute;
-	z-index: 4;
+	z-index: 6;
 	top: 0;
 	left: 0;
 	width: 100%;
@@ -124,10 +121,24 @@ button {
 	transform: translate(-50%, -50%);
 	background: rgba(0,0,0,0.85);
 	color:  white;
-	max-width: 560px;
-	width: 60%;
+	max-width: 1200px;
+	width: 90%;
 	justify-content: center;
-	padding: 32px;
+	padding: 48px;
+}
+
+#about section {
+	display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+#about article {
+	flex:  1;
+}
+
+#about article:nth-child(1) {
+	padding-right: 16px;
 }
 
 @media (max-width: 780px) {
@@ -139,14 +150,19 @@ button {
 		max-width: 100%;
 		box-sizing: border-box;
 	}
+
+	#about section {
+		flex-direction: column;
+	}
 }
+
+
 
 #about h4 {
 	font-family: 'Cormorant', serif;
 	font-weight: 600;
 	font-style: italic;
 	font-size: 2em;
-	color: white;
 	margin:  16px 0;
 }
 
@@ -154,15 +170,17 @@ button {
 	font-family: 'Cormorant', serif;
 	font-weight: 400;
 	font-size: 1.25em;
-	color: #ffffff;
 	margin:  16px 0;
 }
 
-#about p {
+.text {
 	font-family: 'Cormorant', serif;
 	font-weight: 400;
 	font-size: 1.5em;
-	color: #ffffff;
+}
+
+.text span {
+	font-style: italic;
 }
 
 #about button {
@@ -174,8 +192,17 @@ button {
 
 #about .instructions {
 	font-family: 'Space Mono', monospace;
-	font-size: 0.75em;
-	color:  white;
+	font-size: 14px;
+}
+
+.credits {
+	font-family: 'Space Mono', monospace;
+	font-size: 10px;
+	color:  #aaa;
+}
+
+.credits a {
+	color:  #aaa;
 }
 
 @media (max-width: 576px) {
